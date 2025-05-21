@@ -112,9 +112,10 @@ class C64GCR(codec.Codec):
             if sum != 0:
                 continue
             sec_id, cyl, disk_id = struct.unpack('>2BH', hdr[2:6])
+            # cyl = cyl - 4
             if (cyl != self.tracknr() or sec_id >= self.nsec):
-                print('T%d.%d: Ignoring unexpected sector C:%d S:%d ID:%04x'
-                      % (self.cyl, self.head, cyl, sec_id, disk_id))
+                print('T%d.%d: Ignoring unexpected sector C:%d != T:%d or S:%d >= self.nsec:%d ID:%04x - track'
+                      % (self.cyl, self.head, cyl, self.tracknr(), sec_id, self.nsec, disk_id))
                 continue
             if self.disk_id is None:
                 self.disk_id = disk_id
