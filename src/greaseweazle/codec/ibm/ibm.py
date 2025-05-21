@@ -217,7 +217,7 @@ class Sector(TrackArea):
         return (super().__eq__(x)
                 and self.idam == x.idam
                 and self.dam == x.dam)
-    
+
 class IAM(TrackArea):
     def __str__(self):
         return "IAM: %6d-%6d" % (self.start, self.end)
@@ -281,7 +281,13 @@ class IBMTrack(codec.Codec):
 
     def summary_string(self) -> str:
         nsec, nbad = len(self.sectors), self.nr_missing()
-        s = "%s (%d/%d sectors)" % (str(self.mode), nsec - nbad, nsec)
+        res = ""
+        for idx, s in enumerate(self.sectors):
+            if s.crc == 0:
+                res += "\033[92m%s " % str(idx+1)
+            else:
+                res += "\033[91m%s " % str(idx+1)
+        s = "%s (%d/%d sectors) [ %s\033[0m]" % (str(self.mode), nsec - nbad, nsec, res)
         return s
 
     def has_sec(self, sec_id: int):
@@ -320,7 +326,7 @@ class IBMTrack(codec.Codec):
             if self.img_bps is not None:
                 tdat += bytes(self.img_bps - len(s.dam.data))
         return tdat
-        
+
     def verify_track(self, flux) -> bool:
         readback_track = self.__class__(self.cyl, self.head, self.mode)
         readback_track.clock = self.clock
@@ -447,7 +453,7 @@ class IBMTrack(codec.Codec):
         idam = None
 
         ## 1. Calculate offsets within dump
-        
+
         for offs in bits.search(mfm_iam_sync):
             if len(bits) < offs+4*16:
                 continue
@@ -521,7 +527,7 @@ class IBMTrack(codec.Codec):
             mmfm_time, prev_mmfm_offs = 0.0, 0
 
         ## 1. Calculate offsets within dump
-        
+
         for offs in bits.search(fm_iam_sync):
             offs += 16
             areas.append(IAM(offs, offs+1*16))
@@ -906,7 +912,7 @@ class IBMTrack_Scan(codec.Codec):
     RATES = [ 125, 250, 500 ]
     RPMS = [ 300, 360 ]
     BEST_GUESS = None
-    
+
     def __init__(self, cyl: int, head: int, config: IBMTrack_ScanDef):
         self.cyl, self.head = cyl, head
         self.rate, self.rpm = config.rate, config.rpm
@@ -947,7 +953,7 @@ class IBMTrack_Scan(codec.Codec):
             t = IBMTrack(self.cyl, self.head, mode)
             t.clock, t.time_per_rev = clock, time_per_rev
             t.decode_flux(track, pll)
-            # Perfect match, no missing sectors? 
+            # Perfect match, no missing sectors?
             if t.nsec != 0 and t.nr_missing() == 0:
                 self.track = t
                 return
