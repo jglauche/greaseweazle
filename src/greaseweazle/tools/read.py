@@ -98,7 +98,7 @@ def read_with_retry(usb: USB.Unit, args, t) -> Tuple[Flux, Optional[HasFlux]]:
             seek_retry += 1
             retry = 0
         retry += 1
-        _flux = read_and_normalise(usb, args, max(args.revs, 3))
+        _flux = read_and_normalise(usb, args, args.revs)
         for pll in plls:
             if dat.nr_missing() == 0:
                 break
